@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
+    <title>Eukinesis - Cloud</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-container h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .login-container p {
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+        .google-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .google-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            display: none;
+        }
+        .container.active { display: block; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 24px; }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            flex-wrap: wrap;
+        }
+        .tab {
+            flex: 1;
+            min-width: 100px;
+            padding: 15px 10px;
+            text-align: center;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+        }
+        .tab.active {
+            color: #667eea;
+            background: white;
+            border-bottom: 3px solid #667eea;
+        }
+        .content { padding: 20px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-warning { background: #ffc107; color: #000; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .stat-card .value { font-size: 28px; font-weight: bold; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .card { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e9ecef; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #6c757d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .admin-email-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .email-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .sync-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .sync-status.synced { background: #d4edda; color: #155724; }
+        .sync-status.syncing { background: #fff3cd; color: #856404; }
+        @media (max-width: 600px) {
+            .tabs { flex-wrap: wrap; }
+            .tab { flex: 1 1 50%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <h1>🏃‍♂️ Eukinesis</h1>
+        <p>Gestionale Studio Chinesiologia</p>
+        <button class="google-btn" onclick="loginWithGoogle()">
+            <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M17.6 9.2l-.1-1.8H9v3.4h4.8C13.6 12 13 13 12 13.6v2.2h3a8.8 8.8 0 0 0 2.6-6.6z" fill="#4285F4"/><path d="M9 18c2.4 0 4.5-.8 6-2.2l-3-2.2a5.4 5.4 0 0 1-8-2.9H1V13a9 9 0 0 0 8 5z" fill="#34A853"/><path d="M4 10.7a5.4 5.4 0 0 1 0-3.4V5H1a9 9 0 0 0 0 8l3-2.3z" fill="#FBBC05"/><path d="M9 3.6c1.3 0 2.5.4 3.4 1.3L15 2.3A9 9 0 0 0 1 5l3 2.4a5.4 5.4 0 0 1 5-3.7z" fill="#EA4335"/></g></svg>
+            Accedi con Google
+        </button>
+        <div id="loginError" class="error" style="display: none; margin-top: 20px;"></div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="container">
+        <div class="header">
+            <div>
+                <h1>🏃‍♂️ Eukinesis <span class="sync-status synced" id="syncStatus">●</span></h1>
+            </div>
+            <div class="user-info">
+                <span id="userEmail"></span>
+                <button class="logout-btn" onclick="logout()">Esci</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="dashboard">Dashboard</button>
+            <button class="tab" data-tab="clienti">Clienti</button>
+            <button class="tab" data-tab="appuntamenti">Appuntamenti</button>
+            <button class="tab" data-tab="pagamenti">Pagamenti</button>
+            <button class="tab" data-tab="riepilogo">Riepilogo</button>
+            <button class="tab" data-tab="admin">👤 Admin</button>
+        </div>
+
+        <div class="content">
+            <!-- DASHBOARD -->
+            <div id="dashboard" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card"><h3>Clienti</h3><div class="value" id="totalClienti">0</div></div>
+                    <div class="stat-card"><h3>App. Oggi</h3><div class="value" id="appOggi">0</div></div>
+                    <div class="stat-card"><h3>Incassi Mese</h3><div class="value" id="incassiMese">€0</div></div>
+                    <div class="stat-card"><h3>In Attesa</h3><div class="value" id="attesa">€0</div></div>
+                </div>
+                <div class="card">
+                    <h3>Prossimi Appuntamenti</h3>
+                    <div id="prossimiApp">Caricamento...</div>
+                </div>
+            </div>
+
+            <!-- CLIENTI -->
+            <div id="clienti" class="tab-content">
+                <button class="btn btn-primary" onclick="nuovoCliente()">+ Nuovo Cliente</button>
+                <input type="text" id="searchClienti" placeholder="🔍 Cerca..." style="margin: 15px 0;" onkeyup="cercaClienti()">
+                <div id="listaClienti"></div>
+            </div>
+
+            <!-- APPUNTAMENTI -->
+            <div id="appuntamenti" class="tab-content">
+                <button class="btn btn-primary" onclick="nuovoAppuntamento()">+ Nuovo Appuntamento</button>
+                <div id="listaAppuntamenti" style="margin-top: 15px;"></div>
+            </div>
+
+            <!-- PAGAMENTI -->
+            <div id="pagamenti" class="tab-content">
+                <button class="btn btn-primary" onclick="nuovoPagamento()">+ Nuovo Pagamento</button>
+                <div id="listaPagamenti" style="margin-top: 15px;"></div>
+            </div>
+
+            <!-- RIEPILOGO -->
+            <div id="riepilogo" class="tab-content">
+                <h2>Riepilogo Generale</h2>
+                <div style="margin: 20px 0;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <input type="date" id="riepilogoInizio" style="flex: 1; min-width: 150px;">
+                        <input type="date" id="riepilogoFine" style="flex: 1; min-width: 150px;">
+                        <button class="btn btn-primary" onclick="generaRiepilogo()">Genera</button>
+                    </div>
+                </div>
+                <div id="contenutoRiepilogo"></div>
+            </div>
+
+            <!-- ADMIN -->
+            <div id="admin" class="tab-content">
+                <h2>Gestione Utenti Autorizzati</h2>
+                <div class="card">
+                    <h3>Aggiungi Nuovo Utente</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="email" id="newUserEmail" placeholder="email@gmail.com" style="flex: 1;">
+                        <button class="btn btn-success" onclick="aggiungiUtente()">Aggiungi</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Utenti Autorizzati</h3>
+                    <div id="listaUtenti" class="admin-email-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="modalCliente" class="modal">
+        <div class="modal-content">
+            <h2>Cliente</h2>
+            <form onsubmit="salvaCliente(event)">
+                <input type="hidden" id="clienteId">
+                <div class="form-group">
+                    <label>Nome *</label>
+                    <input type="text" id="clienteNome" required>
+                </div>
+                <div class="form-group">
+                    <label>Cognome *</label>
+                    <input type="text" id="clienteCognome" required>
+                </div>
+                <div class="form-group">
+                    <label>Telefono *</label>
+                    <input type="tel" id="clienteTelefono" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="clienteEmail">
+                </div>
+                <button type="submit" class="btn btn-primary">Salva</button>
+                <button type="button" class="btn btn-secondary" onclick="chiudiModal('modalCliente')">Annulla</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalAppuntamento" class="modal">
+        <div class="modal-content">
+            <h2>Appuntamento</h2>
+            <form onsubmit="salvaAppuntamento(event)">
+                <div class="form-group">
+                    <label>Cliente *</label>
+                    <select id="appCliente" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Data *</label>
+                    <input type="date" id="appData" required>
+                </div>
+                <div class="form-group">
+                    <label>Ora *</label>
+                    <input type="time" id="appOra" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo *</label>
+                    <select id="appTipo" required>
+                        <option value="Valutazione">Valutazione</option>
+                        <option value="Rieducazione">Rieducazione</option>
+                        <option value="Ginnastica">Ginnastica</option>
+                        <option value="Altro">Altro</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Salva</button>
+                <button type="button" class="btn btn-secondary" onclick="chiudiModal('modalAppuntamento')">Annulla</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalPagamento" class="modal">
+        <div class="modal-content">
+            <h2>Pagamento</h2>
+            <form onsubmit="salvaPagamento(event)">
+                <div class="form-group">
+                    <label>Cliente *</label>
+                    <select id="pagCliente" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Data *</label>
+                    <input type="date" id="pagData" required>
+                </div>
+                <div class="form-group">
+                    <label>Importo Totale (€) *</label>
+                    <input type="number" id="pagTotale" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Importo Pagato (€) *</label>
+                    <input type="number" id="pagPagato" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Metodo *</label>
+                    <select id="pagMetodo" required>
+                        <option value="Contanti">Contanti</option>
+                        <option value="Carta">Carta</option>
+                        <option value="Bonifico">Bonifico</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo Trattamento *</label>
+                    <select id="pagTipoTrattamento" required>
+                        <option value="Singola Seduta">Singola Seduta</option>
+                        <option value="Pacchetto 5 Sedute">Pacchetto 5 Sedute</option>
+                        <option value="Pacchetto 10 Sedute">Pacchetto 10 Sedute</option>
+                        <option value="Abbonamento Mensile">Abbonamento Mensile</option>
+                        <option value="Abbonamento Trimestrale">Abbonamento Trimestrale</option>
+                        <option value="Abbonamento Semestrale">Abbonamento Semestrale</option>
+                        <option value="Abbonamento Annuale">Abbonamento Annuale</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data Inizio</label>
+                    <input type="date" id="pagInizio">
+                </div>
+                <div class="form-group">
+                    <label>Data Scadenza</label>
+                    <input type="date" id="pagScadenza">
+                </div>
+                <button type="submit" class="btn btn-primary">Salva</button>
+                <button type="button" class="btn btn-secondary" onclick="chiudiModal('modalPagamento')">Annulla</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCshaj3_mPKZGsDoI3NYo5ptzNs10WpwXQ",
+            authDomain: "eukinesis-2a3ca.firebaseapp.com",
+            projectId: "eukinesis-2a3ca",
+            storageBucket: "eukinesis-2a3ca.firebasestorage.app",
+            messagingSenderId: "945062544752",
+            appId: "1:945062544752:web:473141e7f1ab967f99fbb5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        window.auth = auth;
+        window.db = db;
+        window.firebaseLoaded = true;
+
+        let currentUser = null;
+        let clienti = [];
+        let appuntamenti = [];
+        let pagamenti = [];
+
+        // Auth state observer
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                
+                // Check if user is authorized
+                const authorizedDoc = await getDoc(doc(db, 'config', 'authorized_users'));
+                if (authorizedDoc.exists()) {
+                    const authorizedEmails = authorizedDoc.data();
+                    if (authorizedEmails[user.email] === true) {
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('mainApp').classList.add('active');
+                        document.getElementById('userEmail').textContent = user.email;
+                        initApp();
+                    } else {
+                        showLoginError('Non sei autorizzato ad accedere. Contatta l\'amministratore.');
+                        signOut(auth);
+                    }
+                } else {
+                    showLoginError('Configurazione non trovata. Contatta l\'amministratore.');
+                    signOut(auth);
+                }
+            } else {
+                document.getElementById('loginScreen').style.display = 'block';
+                document.getElementById('mainApp').classList.remove('active');
+            }
+        });
+
+        window.loginWithGoogle = async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                showLoginError('Errore durante il login: ' + error.message);
+            }
+        };
+
+        window.logout = () => {
+            signOut(auth);
+        };
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function initApp() {
+            setupRealtimeListeners();
+            setupEventListeners();
+            
+            const oggi = new Date().toISOString().split('T')[0];
+            document.getElementById('appData').value = oggi;
+            document.getElementById('pagData').value = oggi;
+            document.getElementById('pagInizio').value = oggi;
+            
+            const primoGiornoMese = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+            const ultimoGiornoMese = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
+            document.getElementById('riepilogoInizio').value = primoGiornoMese;
+            document.getElementById('riepilogoFine').value = ultimoGiornoMese;
+            
+            caricaUtentiAutorizzati();
+        }
+
+        function setupRealtimeListeners() {
+            setSyncStatus('syncing');
+            
+            // Clienti
+            onSnapshot(collection(db, 'clienti'), (snapshot) => {
+                clienti = [];
+                snapshot.forEach(doc => {
+                    clienti.push({ id: doc.id, ...doc.data() });
+                });
+                mostraClienti();
+                aggiorna();
+                setSyncStatus('synced');
+            });
+
+            // Appuntamenti
+            onSnapshot(collection(db, 'appuntamenti'), (snapshot) => {
+                appuntamenti = [];
+                snapshot.forEach(doc => {
+                    appuntamenti.push({ id: doc.id, ...doc.data() });
+                });
+                mostraAppuntamenti();
+                aggiorna();
+            });
+
+            // Pagamenti
+            onSnapshot(collection(db, 'pagamenti'), (snapshot) => {
+                pagamenti = [];
+                snapshot.forEach(doc => {
+                    pagamenti.push({ id: doc.id, ...doc.data() });
+                });
+                mostraPagamenti();
+                aggiorna();
+            });
+        }
+
+        function setSyncStatus(status) {
+            const statusEl = document.getElementById('syncStatus');
+            if (status === 'synced') {
+                statusEl.className = 'sync-status synced';
+                statusEl.textContent = '● Sincronizzato';
+            } else {
+                statusEl.className = 'sync-status syncing';
+                statusEl.textContent = '● Sincronizzazione...';
+            }
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const target = this.getAttribute('data-tab');
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById(target).classList.add('active');
+                });
+            });
+        }
+
+        // CLIENTI
+        window.nuovoCliente = () => {
+            document.getElementById('clienteId').value = '';
+            document.getElementById('clienteNome').value = '';
+            document.getElementById('clienteCognome').value = '';
+            document.getElementById('clienteTelefono').value = '';
+            document.getElementById('clienteEmail').value = '';
+            apriModal('modalCliente');
+        };
+
+        window.salvaCliente = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('clienteId').value || Date.now().toString();
+            const cliente = {
+                nome: document.getElementById('clienteNome').value,
+                cognome: document.getElementById('clienteCognome').value,
+                telefono: document.getElementById('clienteTelefono').value,
+                email: document.getElementById('clienteEmail').value
+            };
+            
+            await setDoc(doc(db, 'clienti', id), cliente);
+            chiudiModal('modalCliente');
+        };
+
+        window.mostraClienti = () => {
+            const html = clienti.map(c => `
+                <div class="card">
+                    <strong>${c.nome} ${c.cognome}</strong><br>
+                    📞 ${c.telefono}<br>
+                    <button class="btn btn-danger btn-small" onclick="eliminaCliente('${c.id}')">Elimina</button>
+                </div>
+            `).join('');
+            document.getElementById('listaClienti').innerHTML = html || '<p>Nessun cliente</p>';
+        };
+
+        window.eliminaCliente = async (id) => {
+            if (confirm('Eliminare?')) {
+                await deleteDoc(doc(db, 'clienti', id));
+            }
+        };
+
+        window.cercaClienti = () => {
+            const q = document.getElementById('searchClienti').value.toLowerCase();
+            const cards = document.querySelectorAll('#listaClienti .card');
+            cards.forEach(card => {
+                card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        };
+
+        // APPUNTAMENTI
+        window.nuovoAppuntamento = () => {
+            const sel = document.getElementById('appCliente');
+            sel.innerHTML = '<option value="">Seleziona...</option>' + 
+                clienti.map(c => `<option value="${c.id}">${c.nome} ${c.cognome}</option>`).join('');
+            apriModal('modalAppuntamento');
+        };
+
+        window.salvaAppuntamento = async (e) => {
+            e.preventDefault();
+            const app = {
+                clienteId: document.getElementById('appCliente').value,
+                data: document.getElementById('appData').value,
+                ora: document.getElementById('appOra').value,
+                tipo: document.getElementById('appTipo').value
+            };
+            await setDoc(doc(db, 'appuntamenti', Date.now().toString()), app);
+            chiudiModal('modalAppuntamento');
+        };
+
+        window.mostraAppuntamenti = () => {
+            const html = appuntamenti.map(a => {
+                const c = clienti.find(x => x.id === a.clienteId);
+                const nome = c ? `${c.nome} ${c.cognome}` : '?';
+                return `
+                    <div class="card">
+                        📅 ${new Date(a.data).toLocaleDateString('it-IT')} ${a.ora}<br>
+                        👤 ${nome}<br>
+                        🏥 ${a.tipo}<br>
+                        <button class="btn btn-danger btn-small" onclick="eliminaAppuntamento('${a.id}')">Elimina</button>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('listaAppuntamenti').innerHTML = html || '<p>Nessun appuntamento</p>';
+        };
+
+        window.eliminaAppuntamento = async (id) => {
+            if (confirm('Eliminare?')) {
+                await deleteDoc(doc(db, 'appuntamenti', id));
+            }
+        };
+
+        // PAGAMENTI
+        window.nuovoPagamento = () => {
+            const sel = document.getElementById('pagCliente');
+            sel.innerHTML = '<option value="">Seleziona...</option>' + 
+                clienti.map(c => `<option value="${c.id}">${c.nome} ${c.cognome}</option>`).join('');
+            apriModal('modalPagamento');
+        };
+
+        window.salvaPagamento = async (e) => {
+            e.preventDefault();
+            const pag = {
+                clienteId: document.getElementById('pagCliente').value,
+                data: document.getElementById('pagData').value,
+                totale: parseFloat(document.getElementById('pagTotale').value),
+                pagato: parseFloat(document.getElementById('pagPagato').value),
+                metodo: document.getElementById('pagMetodo').value,
+                tipoTrattamento: document.getElementById('pagTipoTrattamento').value,
+                dataInizio: document.getElementById('pagInizio').value,
+                dataScadenza: document.getElementById('pagScadenza').value
+            };
+            await setDoc(doc(db, 'pagamenti', Date.now().toString()), pag);
+            chiudiModal('modalPagamento');
+        };
+
+        window.mostraPagamenti = () => {
+            const html = pagamenti.map(p => {
+                const c = clienti.find(x => x.id === p.clienteId);
+                const nome = c ? `${c.nome} ${c.cognome}` : '?';
+                const stato = p.pagato >= p.totale ? '✅ Pagato' : '⏳ Attesa';
+                
+                let scadenzaHtml = '';
+                if (p.dataScadenza) {
+                    const scadenza = new Date(p.dataScadenza);
+                    const oggi = new Date();
+                    oggi.setHours(0,0,0,0);
+                    scadenza.setHours(0,0,0,0);
+                    const diffGiorni = Math.ceil((scadenza - oggi) / (1000*60*60*24));
+                    
+                    let statoScadenza = '';
+                    if (diffGiorni < 0) {
+                        statoScadenza = `🔴 Scaduto (${Math.abs(diffGiorni)} giorni fa)`;
+                    } else if (diffGiorni === 0) {
+                        statoScadenza = '🟠 Scade oggi!';
+                    } else if (diffGiorni <= 7) {
+                        statoScadenza = `🟡 Scade tra ${diffGiorni} giorni`;
+                    } else {
+                        statoScadenza = `🟢 Scade il ${scadenza.toLocaleDateString('it-IT')}`;
+                    }
+                    scadenzaHtml = `📅 ${statoScadenza}<br>`;
+                }
+                
+                return `
+                    <div class="card">
+                        📅 ${new Date(p.data).toLocaleDateString('it-IT')}<br>
+                        👤 ${nome}<br>
+                        🏥 ${p.tipoTrattamento || 'N/D'}<br>
+                        💶 €${p.pagato}/${p.totale} - ${stato}<br>
+                        💳 ${p.metodo}<br>
+                        ${scadenzaHtml}
+                        <button class="btn btn-danger btn-small" onclick="eliminaPagamento('${p.id}')">Elimina</button>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('listaPagamenti').innerHTML = html || '<p>Nessun pagamento</p>';
+        };
+
+        window.eliminaPagamento = async (id) => {
+            if (confirm('Eliminare?')) {
+                await deleteDoc(doc(db, 'pagamenti', id));
+            }
+        };
+
+        // ADMIN
+        async function caricaUtentiAutorizzati() {
+            const docRef = doc(db, 'config', 'authorized_users');
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                const users = docSnap.data();
+                const html = Object.entries(users).map(([email, authorized]) => {
+                    if (authorized) {
+                        return `
+                            <div class="email-item">
+                                <span>${email}</span>
+                                ${email !== 'polizzi.app@gmail.com' ? 
+                                    `<button class="btn btn-danger btn-small" onclick="rimuoviUtente('${email}')">Rimuovi</button>` : 
+                                    '<span style="color: #667eea; font-weight: bold;">Admin</span>'}
+                            </div>
+                        `;
+                    }
+                    return '';
+                }).join('');
+                
+                document.getElementById('listaUtenti').innerHTML = html || '<p>Nessun utente</p>';
+            }
+        }
+
+        window.aggiungiUtente = async () => {
+            const email = document.getElementById('newUserEmail').value.trim();
+            if (!email) {
+                alert('Inserisci un\'email valida');
+                return;
+            }
+            
+            const docRef = doc(db, 'config', 'authorized_users');
+            await updateDoc(docRef, {
+                [email]: true
+            });
+            
+            document.getElementById('newUserEmail').value = '';
+            caricaUtentiAutorizzati();
+            alert(`✅ Utente ${email} aggiunto!`);
+        };
+
+        window.rimuoviUtente = async (email) => {
+            if (confirm(`Rimuovere l'accesso a ${email}?`)) {
+                const docRef = doc(db, 'config', 'authorized_users');
+                await updateDoc(docRef, {
+                    [email]: false
+                });
+                caricaUtentiAutorizzati();
+            }
+        };
+
+        // RIEPILOGO
+        window.generaRiepilogo = () => {
+            const inizio = new Date(document.getElementById('riepilogoInizio').value);
+            const fine = new Date(document.getElementById('riepilogoFine').value);
+            fine.setHours(23,59,59,999);
+            
+            const clientiPeriodo = new Set();
+            const appPeriodo = appuntamenti.filter(a => {
+                const d = new Date(a.data);
+                if (d >= inizio && d <= fine) {
+                    clientiPeriodo.add(a.clienteId);
+                    return true;
+                }
+                return false;
+            });
+            
+            const pagPeriodo = pagamenti.filter(p => {
+                const d = new Date(p.data);
+                if (d >= inizio && d <= fine) {
+                    clientiPeriodo.add(p.clienteId);
+                    return true;
+                }
+                return false;
+            });
+            
+            const totaleIncassi = pagPeriodo.reduce((s, p) => s + p.pagato, 0);
+            const totaleDovuto = pagPeriodo.reduce((s, p) => s + p.totale, 0);
+            const totaleAttesa = totaleDovuto - totaleIncassi;
+            
+            const oggi = new Date();
+            oggi.setHours(0,0,0,0);
+            const rinnoviNecessari = pagamenti.filter(p => {
+                if (!p.dataScadenza) return false;
+                const scad = new Date(p.dataScadenza);
+                scad.setHours(0,0,0,0);
+                return scad <= oggi || (scad <= fine && scad >= inizio);
+            });
+            
+            const perTipo = {};
+            pagPeriodo.forEach(p => {
+                const tipo = p.tipoTrattamento || 'Non specificato';
+                if (!perTipo[tipo]) perTipo[tipo] = { count: 0, totale: 0 };
+                perTipo[tipo].count++;
+                perTipo[tipo].totale += p.pagato;
+            });
+            
+            let html = `
+                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h3 style="color: white;">Periodo: ${inizio.toLocaleDateString('it-IT')} - ${fine.toLocaleDateString('it-IT')}</h3>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card"><h3>Clienti Attivi</h3><div class="value">${clientiPeriodo.size}</div></div>
+                    <div class="stat-card"><h3>Appuntamenti</h3><div class="value">${appPeriodo.length}</div></div>
+                    <div class="stat-card"><h3>Incassi</h3><div class="value">€${totaleIncassi.toFixed(2)}</div></div>
+                    <div class="stat-card"><h3>In Attesa</h3><div class="value">€${totaleAttesa.toFixed(2)}</div></div>
+                </div>
+                
+                <div class="card">
+                    <h3>💶 Incassi per Tipo</h3>
+                    ${Object.keys(perTipo).length > 0 ? `
+                        <table>
+                            <tr><th>Tipo</th><th>N°</th><th>Totale</th></tr>
+                            ${Object.entries(perTipo).map(([tipo, data]) => `
+                                <tr><td>${tipo}</td><td>${data.count}</td><td>€${data.totale.toFixed(2)}</td></tr>
+                            `).join('')}
+                        </table>
+                    ` : '<p>Nessun dato</p>'}
+                </div>
+                
+                <div class="card">
+                    <h3>🔔 Rinnovi Necessari (${rinnoviNecessari.length})</h3>
+                    ${rinnoviNecessari.length > 0 ? rinnoviNecessari.map(p => {
+                        const c = clienti.find(x => x.id === p.clienteId);
+                        const nome = c ? `${c.nome} ${c.cognome}` : '?';
+                        const scad = new Date(p.dataScadenza);
+                        const diffGiorni = Math.ceil((scad - oggi) / (1000*60*60*24));
+                        
+                        let badge = '';
+                        if (diffGiorni < 0) badge = `🔴 Scaduto ${Math.abs(diffGiorni)} giorni fa`;
+                        else if (diffGiorni === 0) badge = '🟠 Scade oggi';
+                        else badge = `🟡 Scade tra ${diffGiorni} giorni`;
+                        
+                        return `
+                            <div style="padding: 10px; background: white; margin: 10px 0; border-radius: 5px;">
+                                <strong>${nome}</strong><br>
+                                ${p.tipoTrattamento || 'N/D'}<br>
+                                Scadenza: ${scad.toLocaleDateString('it-IT')}<br>
+                                ${badge}
+                            </div>
+                        `;
+                    }).join('') : '<p>Nessun rinnovo necessario</p>'}
+                </div>
+            `;
+            
+            document.getElementById('contenutoRiepilogo').innerHTML = html;
+        };
+
+        // UTILITÀ
+        function aggiorna() {
+            document.getElementById('totalClienti').textContent = clienti.length;
+            
+            const oggi = new Date().toISOString().split('T')[0];
+            const appOggi = appuntamenti.filter(a => a.data === oggi).length;
+            document.getElementById('appOggi').textContent = appOggi;
+            
+            const mese = new Date().getMonth();
+            const anno = new Date().getFullYear();
+            const incassi = pagamenti.filter(p => {
+                const d = new Date(p.data);
+                return d.getMonth() === mese && d.getFullYear() === anno;
+            }).reduce((s, p) => s + p.pagato, 0);
+            document.getElementById('incassiMese').textContent = '€' + incassi.toFixed(2);
+            
+            const attesa = pagamenti.filter(p => p.pagato < p.totale)
+                .reduce((s, p) => s + (p.totale - p.pagato), 0);
+            document.getElementById('attesa').textContent = '€' + attesa.toFixed(2);
+            
+            // Prossimi appuntamenti
+            const ora = new Date();
+            const prossimi = appuntamenti.filter(a => {
+                const dataApp = new Date(a.data + ' ' + a.ora);
+                return dataApp >= ora;
+            }).sort((a, b) => {
+                const dateA = new Date(a.data + ' ' + a.ora);
+                const dateB = new Date(b.data + ' ' + b.ora);
+                return dateA - dateB;
+            }).slice(0, 5);
+            
+            const prossimiHtml = prossimi.length > 0 ? prossimi.map(app => {
+                const c = clienti.find(x => x.id === app.clienteId);
+                const nome = c ? `${c.nome} ${c.cognome}` : '?';
+                return `<p><strong>${new Date(app.data).toLocaleDateString('it-IT')} ${app.ora}</strong> - ${nome} - ${app.tipo}</p>`;
+            }).join('') : '<p>Nessun appuntamento in programma</p>';
+            
+            document.getElementById('prossimiApp').innerHTML = prossimiHtml;
+        }
+
+        window.apriModal = (id) => {
+            document.getElementById(id).classList.add('active');
+        };
+
+        window.chiudiModal = (id) => {
+            document.getElementById(id).classList.remove('active');
+        };
+    </script>
+</body>
+</html>
